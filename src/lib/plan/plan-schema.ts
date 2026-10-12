@@ -72,3 +72,37 @@ export const periodTopicsToolSchema = {
     required: ["topics"],
   },
 };
+
+/**
+ * Turns a student's free-text progress update into structured signal the
+ * re-plan engine can act on — which real topics (from their own plan) to
+ * treat as mastered vs still-struggling, plus any schedule-affecting
+ * context in plain language.
+ */
+export const replanSignalToolSchema = {
+  name: "emit_replan_signal",
+  description: "Submit what the student's update means for their plan.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      masteredTopics: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Exact topic titles, copied verbatim from the provided topic list, that the student says they've finished, understood well, or no longer need time on. Empty array if none mentioned.",
+      },
+      strugglingTopics: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Exact topic titles, copied verbatim from the provided topic list, that the student says they're behind on, found hard, or still need more time for. Empty array if none mentioned.",
+      },
+      circumstances: {
+        type: "string",
+        description:
+          "1-2 plain sentences summarizing any context that should affect the schedule — illness, a busier or freer week, lost motivation, etc. Empty string if the update is purely about specific topics.",
+      },
+    },
+    required: ["masteredTopics", "strugglingTopics", "circumstances"],
+  },
+};

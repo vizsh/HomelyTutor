@@ -9,6 +9,8 @@ export type GenerateRealPlanOptions = {
   alreadyMastered?: string[];
   /** Topics planned before but not yet done — worth prioritizing early. */
   stillPending?: string[];
+  /** Free-text context from the student (illness, a busier week, etc.) extracted from their own words. */
+  studentNote?: string;
 };
 
 function buildSystemPrompt(
@@ -43,9 +45,13 @@ function buildSystemPrompt(
     ? `\n\nThe student provided this material to study from — ground every topic strictly in this content, not your general knowledge of the subject. Use its own terminology and structure:\n"""\n${input.syllabusText.slice(0, 4000)}\n"""`
     : "";
 
+  const noteHint = opts.studentNote
+    ? `\nThe student's own words about what's changed: "${opts.studentNote}". Let this realistically shape pacing — e.g. ease up if they mention being overwhelmed or sick, don't just ignore it.`
+    : "";
+
   return `You are a study planner inside a student app, writing real study content — not placeholder text. The student is preparing for: "${input.examName}" (context: ${input.goal}). They have ${input.hoursPerDay} hours/day available, studying ${input.studyDays === "daily" ? "every day" : "on weekdays"}.
 
-This is period ${periodIndex + 1} of ${totalPeriods}: "${slot.label}", ${slot.dateRangeLabel} (${slot.studyDayCount} study days). ${scaleHint}${coveredHint}${masteredHint}${pendingHint}${groundingHint}
+This is period ${periodIndex + 1} of ${totalPeriods}: "${slot.label}", ${slot.dateRangeLabel} (${slot.studyDayCount} study days). ${scaleHint}${coveredHint}${masteredHint}${pendingHint}${noteHint}${groundingHint}
 
 Rules:
 ${

@@ -9,7 +9,9 @@ import { DetailsForm } from "@/components/plan/details-form";
 import { ReplanForm, type ReplanInput } from "@/components/plan/replan-form";
 import { PlanOverview } from "@/components/plan/plan-overview";
 import { PeriodCard } from "@/components/plan/period-card";
+import { CalendarView } from "@/components/plan/calendar-view";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { generatePlan } from "@/lib/plan/generate-plan";
 import type { PlanInput } from "@/lib/plan/plan-input";
 import type { LearningPlan } from "@/lib/plan/types";
@@ -204,11 +206,29 @@ export default function PlanPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-4">
-              {plan.periods.map((period, i) => (
-                <PeriodCard key={period.id} period={period} index={i} onToggleTopic={(topicId, completed) => toggleTopic(period.id, topicId, completed)} />
-              ))}
-            </div>
+            <Tabs defaultValue="weekly">
+              <TabsList>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="weekly">
+                <div className="flex flex-col gap-4">
+                  {plan.periods.map((period, i) => (
+                    <PeriodCard
+                      key={period.id}
+                      period={period}
+                      index={i}
+                      onToggleTopic={(topicId, completed) => toggleTopic(period.id, topicId, completed)}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="calendar">
+                <CalendarView plan={plan} />
+              </TabsContent>
+            </Tabs>
 
             <button
               type="button"

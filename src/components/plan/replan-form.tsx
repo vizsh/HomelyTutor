@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, RotateCcw, FileText } from "lucide-react";
+import { ArrowLeft, RotateCcw, FileText, MessageCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export type ReplanInput = {
   hoursPerDay: number;
   studyDays: StudyDays;
   syllabusText?: string;
+  progressNote?: string;
 };
 
 export function ReplanForm({
@@ -44,12 +45,19 @@ export function ReplanForm({
   const [studyDays, setStudyDays] = useState<StudyDays>(plan.studyDays);
   const [showSyllabus, setShowSyllabus] = useState(false);
   const [syllabusText, setSyllabusText] = useState("");
+  const [progressNote, setProgressNote] = useState("");
 
   const canSubmit = targetDate && hoursPerDay !== null;
 
   function submit() {
     if (!canSubmit) return;
-    onSubmit({ targetDate, hoursPerDay: hoursPerDay!, studyDays, syllabusText: syllabusText.trim() || undefined });
+    onSubmit({
+      targetDate,
+      hoursPerDay: hoursPerDay!,
+      studyDays,
+      syllabusText: syllabusText.trim() || undefined,
+      progressNote: progressNote.trim() || undefined,
+    });
   }
 
   return (
@@ -68,6 +76,25 @@ export function ReplanForm({
         <p className="mt-1 text-sm text-muted-foreground">
           {doneCount} of {totalCount} topics marked done. I&apos;ll build a fresh schedule for what&apos;s
           left, prioritizing anything you fell behind on.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="progressNote" className="flex items-center gap-1.5">
+          <MessageCircle className="size-3.5" />
+          Tell me what happened
+        </Label>
+        <textarea
+          id="progressNote"
+          value={progressNote}
+          onChange={(e) => setProgressNote(e.target.value)}
+          placeholder="e.g. 'I nailed the ethics section but never got to fixed income. Been a rough week, sick for a few days.'"
+          rows={3}
+          className="w-full resize-none rounded-xl border border-input bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional, in your own words — I&apos;ll match what you mention to your actual topics and factor
+          it in alongside the checkboxes below.
         </p>
       </div>
 
