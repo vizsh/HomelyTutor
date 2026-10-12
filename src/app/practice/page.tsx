@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ListChecks, TriangleAlert } from "lucide-react";
+import { ListChecks, TriangleAlert, RotateCcw } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { TopicForm } from "@/components/practice/topic-form";
@@ -25,6 +25,14 @@ function PracticeInner() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [weakTopics, setWeakTopics] = useState<{ topic: string; score: number; total: number }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/practice/weak-topics")
+      .then((res) => res.json())
+      .then((data) => setWeakTopics(data.topics ?? []))
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(topic: string) {
     setStage("loading");
@@ -95,6 +103,25 @@ function PracticeInner() {
               </p>
             </div>
             <TopicForm onSubmit={handleSubmit} pending={false} />
+
+            {weakTopics.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-muted-foreground">Worth practicing again</p>
+                <div className="flex flex-wrap gap-2">
+                  {weakTopics.map((t) => (
+                    <button
+                      key={t.topic}
+                      type="button"
+                      onClick={() => handleSubmit(t.topic)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                    >
+                      <RotateCcw className="size-3.5" />
+                      {t.topic} ({t.score}/{t.total})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 

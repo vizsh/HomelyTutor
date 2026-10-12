@@ -80,3 +80,21 @@ export function daysBetween(today: Date, targetDate: Date) {
   const end = startOfDay(targetDate);
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / DAY_MS));
 }
+
+/** The period covering today, or the nearest upcoming one if today falls in
+ * a gap, or the last period if the whole plan is already in the past. */
+export function findCurrentPeriod<T extends { startDate: string; endDate: string }>(
+  periods: T[],
+  today: Date = new Date(),
+): T | null {
+  if (periods.length === 0) return null;
+  const now = startOfDay(today).getTime();
+
+  const current = periods.find((p) => now >= new Date(p.startDate).getTime() && now <= new Date(p.endDate).getTime());
+  if (current) return current;
+
+  const upcoming = periods.find((p) => new Date(p.startDate).getTime() > now);
+  if (upcoming) return upcoming;
+
+  return periods[periods.length - 1];
+}

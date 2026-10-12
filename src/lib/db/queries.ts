@@ -53,3 +53,42 @@ export function getUserHistory(userId: string) {
 
   return { plans, quizzes };
 }
+
+export function getLatestPlan(userId: string): LearningPlan | null {
+  const row = db
+    .select()
+    .from(learningPlans)
+    .where(eq(learningPlans.userId, userId))
+    .orderBy(desc(learningPlans.createdAt))
+    .limit(1)
+    .get();
+
+  if (!row) return null;
+  try {
+    return JSON.parse(row.planJson) as LearningPlan;
+  } catch {
+    return null;
+  }
+}
+
+/** Topics worth re-practicing: the most recent attempt per distinct topic
+ * (so an improved score replaces an old weak one), filtered to genuinely
+ * weak ones, weakest first. */
+export function getWeakQuizTopics(userId: string, limit = 3) {
+  const rows = db
+    .select()
+    .from(quizAttempts)
+    .where(eq(quizAttempts.userId, userId))
+    .orderBy(desc(quizAttempts.createdAt))
+    .all();
+
+  const latestByTopic = new Map<string, (typeof rows)[number]>();
+  for (const row of rows) {
+    if (!latestByTopic.has(row.topic)) latestByTopic.set(row.topic, row);
+  }
+
+  return [...latestByTopic.values()]
+    .filter((r) => r.score / r.total < 0.7)
+    .sort((a, b) => a.score / a.total - b.score / b.total)
+    .slice(0, limit);
+}
