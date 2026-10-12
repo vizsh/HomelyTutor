@@ -1,26 +1,111 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.75rem;
+
+  /* warm paper, not stark white — avoids the sterile "AI dashboard" look */
+  --background: #faf8f5;
+  --foreground: #1c1917;
+
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+
+  /* deep ink navy — calm authority instead of AI-cliche purple/blue gradient */
+  --primary: #27364d;
+  --primary-foreground: #faf8f5;
+
+  --secondary: #efeae3;
+  --secondary-foreground: #27364d;
+
+  --muted: #f1ede7;
+  --muted-foreground: #78716c;
+
+  /* warm amber — used sparingly for progress, streaks, highlights */
+  --accent: #d98e36;
+  --accent-foreground: #2a1a05;
+
+  --success: #4d7358;
+  --success-foreground: #faf8f5;
+
+  --destructive: #b3452e;
+  --destructive-foreground: #faf8f5;
+
+  --border: #e7e1d8;
+  --input: #e7e1d8;
+  --ring: #27364d;
+}
+
+.dark {
+  --background: #15130f;
+  --foreground: #f1ede7;
+
+  --card: #1c1a16;
+  --card-foreground: #f1ede7;
+
+  --popover: #1c1a16;
+  --popover-foreground: #f1ede7;
+
+  --primary: #c9d4e4;
+  --primary-foreground: #1c2534;
+
+  --secondary: #262320;
+  --secondary-foreground: #f1ede7;
+
+  --muted: #262320;
+  --muted-foreground: #a8a097;
+
+  --accent: #e3a455;
+  --accent-foreground: #2a1a05;
+
+  --success: #7fa98c;
+  --success-foreground: #12201a;
+
+  --destructive: #d9735a;
+  --destructive-foreground: #1c1917;
+
+  --border: #322e28;
+  --input: #322e28;
+  --ring: #c9d4e4;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.25rem);
+
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

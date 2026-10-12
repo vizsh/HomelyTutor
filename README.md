@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mentor
 
-## Getting Started
+A tutor built around three different jobs:
 
-First, run the development server:
+- **Plan** (`/plan`) — tell it a vague learning goal, it researches and maps a stage-by-stage path with real sources.
+- **Practice** (`/practice`) — name a topic or paste your notes, it quizzes you and explains each answer.
+- **Spar** (`/spar`) — describe a negotiation scenario, it plays the other person live, by voice, in real time.
+
+No real accounts yet — the sidebar has a demo-user switcher (Maya / Devon / Priya) seeded with
+sample history so the app is useful to click through without signing in.
+
+## Stack
+
+- Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind v4
+- UI: a small hand-rolled component set (not shadcn's CLI output, but the same pattern — Radix
+  primitives + CVA), in a warm/light "soft SaaS" theme deliberately avoiding the dark/gradient
+  "AI app" look
+- Plan & Practice: Claude (`@anthropic-ai/sdk`), with a web-search tool for grounded resource
+  links on the Plan pillar
+- Spar: OpenAI's Realtime API over WebRTC — the browser mic connects *directly* to OpenAI; the
+  Next.js server only mints a short-lived token, so it isn't bound by serverless function
+  duration limits
+- Data: SQLite via Drizzle ORM, zero external accounts needed. `data/app.db` ships pre-seeded
+  with the three demo users — clone and run, no setup step required
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The demo users and their sample history are
+already seeded in the committed `data/app.db`. To re-seed from scratch:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+rm data/app.db && npm run db:seed
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+Copy `.env.local.example` to `.env.local` and fill in what you want live:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+cp .env.local.example .env.local
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Needed for | Without it |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | `/plan` and `/practice` real generation | Falls back to clearly-labeled demo data |
+| `OPENAI_API_KEY` | `/spar` live voice calls | Shows a setup message instead of connecting |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Both pillars degrade gracefully without their key — the app never pretends to have live data it
+doesn't.
 
-## Deploy on Vercel
+## A known, accepted tradeoff
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`data/app.db` is a plain SQLite file. On Vercel's serverless filesystem it resets on redeploy
+and isn't shared across instances — fine for a demo that isn't trying to scale yet. If this ever
+needs real multi-user persistence in production, swap `src/lib/db/client.ts` for a hosted
+Postgres (e.g. Neon) — the schema and query code in `src/lib/db/` don't need to change, only the
+driver.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploying on Vercel
+
+1. Push this repo, import it in Vercel.
+2. Add `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` as environment variables in the Vercel project
+   settings (not committed — see above).
+3. Deploy. The Spar pillar's voice calls go straight from the browser to OpenAI; Vercel never
+   proxies the audio.
