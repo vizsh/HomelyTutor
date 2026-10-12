@@ -42,13 +42,6 @@ sqlite.exec(`
     mocked INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL
   );
-  CREATE TABLE IF NOT EXISTS spar_sessions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id),
-    scenario TEXT NOT NULL,
-    exchange_count INTEGER NOT NULL,
-    created_at INTEGER NOT NULL
-  );
 `);
 
 export const db = drizzle(sqlite, { schema });

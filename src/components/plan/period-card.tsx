@@ -46,6 +46,12 @@ export function PeriodCard({ period, index }: { period: PlanPeriod; index: numbe
       <div className="flex flex-col gap-4">
         {period.topics.map((topic) => (
           <div key={topic.id} className="border-l-2 border-border pl-4">
+            {topic.domain && (
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                {topic.domain}
+                {topic.examWeight && <span className="text-accent-foreground"> · {topic.examWeight} of exam</span>}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <h4 className="text-sm font-medium">{topic.title}</h4>
               <span

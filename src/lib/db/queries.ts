@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "./client";
-import { learningPlans, quizAttempts, sparSessions } from "./schema";
+import { learningPlans, quizAttempts } from "./schema";
 import type { LearningPlan } from "@/lib/plan/types";
 import type { QuizSet } from "@/lib/practice/types";
 
@@ -36,18 +36,6 @@ export function saveQuizAttempt(userId: string, quiz: QuizSet, score: number, mo
     .run();
 }
 
-export function saveSparSession(userId: string, scenario: string, exchangeCount: number) {
-  db.insert(sparSessions)
-    .values({
-      id: randomUUID(),
-      userId,
-      scenario,
-      exchangeCount,
-      createdAt: new Date(),
-    })
-    .run();
-}
-
 export function getUserHistory(userId: string) {
   const plans = db
     .select()
@@ -63,12 +51,5 @@ export function getUserHistory(userId: string) {
     .orderBy(desc(quizAttempts.createdAt))
     .all();
 
-  const spars = db
-    .select()
-    .from(sparSessions)
-    .where(eq(sparSessions.userId, userId))
-    .orderBy(desc(sparSessions.createdAt))
-    .all();
-
-  return { plans, quizzes, spars };
+  return { plans, quizzes };
 }

@@ -21,19 +21,12 @@ export async function generateMockPlan(input: PlanInput): Promise<LearningPlan> 
       const priority = PRIORITY_CYCLE[(i + j) % 3];
       return {
         id: `${slot.id}-t${j + 1}`,
-        title: `${input.examName} — core topic ${i + 1}.${j + 1}`,
+        title: `[Placeholder — not real ${input.examName} content]`,
         summary:
-          priority === "high"
-            ? "Foundational, heavily-weighted material — build this first and revisit it."
-            : priority === "medium"
-              ? "Standard coverage — solid, expected material for this stage."
-              : "Lighter pass — useful but lower-stakes for this exam.",
+          "Ollama wasn't reachable, so this slot couldn't be filled with real topics. Make sure `ollama serve` is running and try again.",
         priority,
         estimatedHours: Math.max(1, Math.round(slot.studyDayCount * input.hoursPerDay * (0.5 / topicCount))),
-        resources: [
-          { kind: "docs" as const, label: "Syllabus reference material" },
-          { kind: "practice" as const, label: "Practice questions" },
-        ],
+        resources: [{ kind: "practice" as const, label: "(placeholder resource)" }],
       };
     });
 

@@ -11,20 +11,33 @@ import { ollama, isOllamaAvailable, OLLAMA_MODEL, extractToolArguments } from "@
 
 export const maxDuration = 60;
 
-function buildSystemPrompt(input: PlanInput, slot: PeriodSlot, periodIndex: number, totalPeriods: number) {
+function buildSystemPrompt(
+  input: PlanInput,
+  slot: PeriodSlot,
+  periodIndex: number,
+  totalPeriods: number,
+  coveredSoFar: string[],
+) {
   const scaleHint =
     totalPeriods <= 2
       ? "This is a short, narrow run (like a single unit test) — 1-2 focused topics, no padding."
       : "This is part of a longer syllabus — spread proportional coverage across periods, with the heaviest, most foundational material earlier.";
 
-  return `You are a study planner inside a student app. The student is preparing for: "${input.examName}" (context: ${input.goal}). They have ${input.hoursPerDay} hours/day available, studying ${input.studyDays === "daily" ? "every day" : "on weekdays"}.
+  const coveredHint =
+    coveredSoFar.length > 0
+      ? `\nAlready covered in earlier periods (do not repeat these, move to new ground): ${coveredSoFar.join("; ")}.`
+      : "";
 
-This is period ${periodIndex + 1} of ${totalPeriods}: "${slot.label}", ${slot.dateRangeLabel} (${slot.studyDayCount} study days). ${scaleHint}
+  return `You are a study planner inside a student app, writing real study content — not placeholder text. The student is preparing for: "${input.examName}" (context: ${input.goal}). They have ${input.hoursPerDay} hours/day available, studying ${input.studyDays === "daily" ? "every day" : "on weekdays"}.
+
+This is period ${periodIndex + 1} of ${totalPeriods}: "${slot.label}", ${slot.dateRangeLabel} (${slot.studyDayCount} study days). ${scaleHint}${coveredHint}
 
 Rules:
+- If "${input.examName}" is a known standardized test, professional certification, or board exam (e.g. CFA, a national board exam, a university course with a standard syllabus), you almost certainly know its real domain/topic structure from your training — use the ACTUAL domain names and their real published or realistically-estimated exam weightings. Do not invent a generic structure when a real one exists.
+- Every topic title must be a real, specific thing a student of this subject would recognize (e.g. "Time Value of Money", "The Krebs Cycle", "Newton's Second Law: F=ma derivation") — never a generic placeholder like "Core topic 1" or "Week 1 material".
 - Mark each topic's priority (high/medium/low) based on how heavily it's weighted or how foundational it is for this specific exam.
-- For the resource, name one real, well-known resource for this subject (official docs, a well-regarded textbook/course) by its actual name — no URL, you cannot browse the web.
-- Only include a milestone if this period (period ${periodIndex + 1} of ${totalPeriods}) genuinely warrants a checkpoint — a mock test, a revision pass. Most periods don't need one.
+- For the resource, name one real, well-known resource for this subject (an actual textbook, official curriculum provider, or well-regarded course) by its real name — no URL, you cannot browse the web.
+- Only include a milestone if this period genuinely warrants a checkpoint — a mock test, a revision pass. Most periods don't need one.
 - Call emit_period_topics exactly once.`;
 }
 
@@ -33,11 +46,12 @@ async function generatePeriodTopics(
   slot: PeriodSlot,
   periodIndex: number,
   totalPeriods: number,
+  coveredSoFar: string[],
 ): Promise<{ topics: PlanTopic[]; milestone?: string } | null> {
   const response = await ollama.chat.completions.create({
     model: OLLAMA_MODEL,
     messages: [
-      { role: "system", content: buildSystemPrompt(input, slot, periodIndex, totalPeriods) },
+      { role: "system", content: buildSystemPrompt(input, slot, periodIndex, totalPeriods, coveredSoFar) },
       { role: "user", content: "Build this period's topics now." },
     ],
     tools: [
@@ -70,10 +84,11 @@ async function generatePeriodWithRetry(
   slot: PeriodSlot,
   periodIndex: number,
   totalPeriods: number,
+  coveredSoFar: string[],
 ) {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const result = await generatePeriodTopics(input, slot, periodIndex, totalPeriods);
+      const result = await generatePeriodTopics(input, slot, periodIndex, totalPeriods, coveredSoFar);
       if (result) return result;
     } catch (err) {
       console.error(`period ${periodIndex} attempt ${attempt} failed`, err);
@@ -120,9 +135,11 @@ export async function POST(req: Request) {
 
   try {
     const periods: PlanPeriod[] = [];
+    const coveredSoFar: string[] = [];
+
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
-      const result = await generatePeriodWithRetry(input, slot, i, slots.length);
+      const result = await generatePeriodWithRetry(input, slot, i, slots.length, coveredSoFar);
       if (!result) {
         // One bad period is enough to make the whole plan feel inconsistent —
         // fall back to the fully-mocked plan rather than mixing real and
@@ -140,6 +157,7 @@ export async function POST(req: Request) {
         topics: result.topics,
         milestone: result.milestone,
       });
+      coveredSoFar.push(...result.topics.map((t) => t.title));
     }
 
     const allTopics = periods.flatMap((p) => p.topics);

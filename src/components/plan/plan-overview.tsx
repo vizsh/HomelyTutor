@@ -23,6 +23,13 @@ export function PlanOverview({ plan }: { plan: LearningPlan }) {
     { key: "low" as const, hours: low, pct: (low / totalHours) * 100 },
   ].filter((s) => s.hours > 0);
 
+  const domains = new Map<string, string | undefined>();
+  for (const p of plan.periods) {
+    for (const t of p.topics) {
+      if (t.domain && !domains.has(t.domain)) domains.set(t.domain, t.examWeight);
+    }
+  }
+
   const periodsTotalDays = plan.periods.reduce((sum, p) => {
     const days = Math.max(
       1,
@@ -37,6 +44,24 @@ export function PlanOverview({ plan }: { plan: LearningPlan }) {
         <p className="text-sm text-muted-foreground">Your plan for</p>
         <h2 className="font-serif text-2xl leading-tight">{plan.examName}</h2>
       </div>
+
+      {domains.size > 0 && (
+        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary/40 p-4">
+          <p className="text-sm font-medium text-muted-foreground">What this exam covers</p>
+          <div className="flex flex-col divide-y divide-border">
+            {[...domains.entries()].map(([domain, weight]) => (
+              <div key={domain} className="flex items-center justify-between gap-3 py-2 text-sm first:pt-0 last:pb-0">
+                <span>{domain}</span>
+                {weight && (
+                  <span className="shrink-0 rounded-full bg-card px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                    {weight}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         <Stat

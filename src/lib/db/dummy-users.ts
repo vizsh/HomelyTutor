@@ -8,7 +8,7 @@ export const DUMMY_USERS = [
   {
     id: "u-devon",
     name: "Devon",
-    tagline: "Prepping to negotiate a raise",
+    tagline: "Studying for CFA Level I",
     avatarInitials: "DV",
   },
   {

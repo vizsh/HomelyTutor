@@ -18,8 +18,25 @@ export const periodTopicsToolSchema = {
           type: "object",
           properties: {
             id: { type: "string", description: "short kebab-case slug" },
-            title: { type: "string" },
-            summary: { type: "string", description: "1 sentence: what this covers and why it's here now" },
+            title: {
+              type: "string",
+              description:
+                "A real, specific topic name a student of this subject would recognize — e.g. 'Time Value of Money' or 'The Krebs Cycle'. NEVER a generic placeholder like 'Core topic 1' or 'Week 1 material'.",
+            },
+            domain: {
+              type: "string",
+              description:
+                "The broad syllabus section/domain this topic belongs to, ONLY if this exam has a known standard structure (a professional certification, standardized test, board syllabus) — e.g. 'Ethical and Professional Standards' for CFA, 'Mechanics' for a physics board exam. Omit entirely for a custom/informal goal with no official syllabus.",
+            },
+            examWeight: {
+              type: "string",
+              description:
+                "The domain's real published exam weight if you know it (e.g. '15-20%'), or your best realistic estimate if you don't know the exact figure. Omit only if this exam truly has no weighting concept (e.g. a personal skill goal).",
+            },
+            summary: {
+              type: "string",
+              description: "1-2 sentences: specifically what this topic covers, not a generic description.",
+            },
             priority: {
               type: "string",
               enum: ["high", "medium", "low"],
@@ -35,7 +52,10 @@ export const periodTopicsToolSchema = {
                 type: "object",
                 properties: {
                   kind: { type: "string", enum: ["docs", "course", "video", "practice", "book"] },
-                  label: { type: "string" },
+                  label: {
+                    type: "string",
+                    description: "A real, specific resource name (an actual textbook, course, or doc site) — not 'Syllabus reference material'.",
+                  },
                 },
                 required: ["kind", "label"],
               },

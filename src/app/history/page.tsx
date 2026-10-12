@@ -1,4 +1,4 @@
-import { Compass, ListChecks, Mic, History as HistoryIcon } from "lucide-react";
+import { Compass, ListChecks, History as HistoryIcon } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,9 +10,9 @@ import { formatRelativeTime } from "@/lib/format-relative-time";
 
 export default async function HistoryPage() {
   const user = await getActiveUser();
-  const { plans, quizzes, spars } = getUserHistory(user.id);
+  const { plans, quizzes } = getUserHistory(user.id);
 
-  const hasNothing = plans.length === 0 && quizzes.length === 0 && spars.length === 0;
+  const hasNothing = plans.length === 0 && quizzes.length === 0;
 
   return (
     <AppShell>
@@ -31,8 +31,8 @@ export default async function HistoryPage() {
 
         {hasNothing && (
           <p className="text-center text-sm text-muted-foreground">
-            Nothing yet for this demo user — generate a plan, take a quiz, or
-            start a call to see it show up here.
+            Nothing yet for this demo user — generate a plan or take a quiz
+            to see it show up here.
           </p>
         )}
 
@@ -84,21 +84,6 @@ export default async function HistoryPage() {
           </section>
         )}
 
-        {spars.length > 0 && (
-          <section className="flex flex-col gap-3">
-            <SectionHeader icon={Mic} label="Voice sparring sessions" />
-            {spars.map((s) => (
-              <Card key={s.id} className="p-4">
-                <CardContent className="flex flex-col gap-1 p-0">
-                  <p className="text-sm">{s.scenario}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {s.exchangeCount} exchanges · {formatRelativeTime(new Date(s.createdAt))}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </section>
-        )}
       </div>
     </AppShell>
   );

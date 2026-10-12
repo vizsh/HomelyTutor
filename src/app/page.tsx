@@ -1,4 +1,4 @@
-import { Compass, ListChecks, Mic } from "lucide-react";
+import { Compass, ListChecks } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { UnifiedInput } from "@/components/home/unified-input";
@@ -22,7 +22,7 @@ export default async function Home() {
 
         <UnifiedInput />
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <ModeCard
             href="/plan"
             icon={Compass}
@@ -35,13 +35,6 @@ export default async function Home() {
             icon={ListChecks}
             title="Test my knowledge"
             description="Give me a topic or your notes, I'll quiz you on it."
-            accent="var(--secondary)"
-          />
-          <ModeCard
-            href="/spar"
-            icon={Mic}
-            title="Practice out loud"
-            description="Describe a scenario, I'll play the other side — live, by voice."
             accent="var(--secondary)"
           />
         </div>

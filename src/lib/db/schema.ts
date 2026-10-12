@@ -32,13 +32,3 @@ export const quizAttempts = sqliteTable("quiz_attempts", {
   mocked: integer("mocked", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
-
-export const sparSessions = sqliteTable("spar_sessions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id),
-  scenario: text("scenario").notNull(),
-  exchangeCount: integer("exchange_count").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
