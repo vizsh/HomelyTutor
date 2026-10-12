@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ListChecks, TriangleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -13,7 +14,10 @@ import { Progress } from "@/components/ui/progress";
 
 type Stage = "idle" | "loading" | "quiz" | "summary";
 
-export default function PracticePage() {
+function PracticeInner() {
+  const searchParams = useSearchParams();
+  const prefillTopic = searchParams.get("topic") ?? "";
+
   const [stage, setStage] = useState<Stage>("idle");
   const [quiz, setQuiz] = useState<QuizSet | null>(null);
   const [mocked, setMocked] = useState(false);
@@ -37,6 +41,17 @@ export default function PracticePage() {
       setStage("idle");
     }
   }
+
+  // Arriving from a Plan stage's "Test me on this" link — skip straight to
+  // generating instead of making the user retype what they just clicked.
+  useEffect(() => {
+    if (prefillTopic) {
+      // Triggers a real fetch (quiz generation), not just local state sync —
+      // the lint rule can't tell that apart from a plain setState-in-effect.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleSubmit(prefillTopic);
+    }
+  }, [prefillTopic]);
 
   function handleAnswered(correct: boolean) {
     if (correct) setCorrectCount((c) => c + 1);
@@ -139,5 +154,13 @@ export default function PracticePage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function PracticePage() {
+  return (
+    <Suspense fallback={null}>
+      <PracticeInner />
+    </Suspense>
   );
 }

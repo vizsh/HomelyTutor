@@ -1,4 +1,7 @@
-import { FileText, GraduationCap, Video, Dumbbell, BookOpen } from "lucide-react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { FileText, GraduationCap, Video, Dumbbell, BookOpen, ListChecks } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import type { LearningPlan, ResourceKind } from "@/lib/plan/types";
@@ -14,6 +17,13 @@ const resourceIcon: Record<ResourceKind, LucideIcon> = {
 };
 
 export function PlanTimeline({ plan }: { plan: LearningPlan }) {
+  const router = useRouter();
+
+  function testOnStage(stageTitle: string, summary: string) {
+    const topic = `${stageTitle} — ${summary}`;
+    router.push(`/practice?topic=${encodeURIComponent(topic)}`);
+  }
+
   return (
     <div className="flex flex-col gap-1">
       <div className="mb-6 flex items-center justify-between">
@@ -67,6 +77,14 @@ export function PlanTimeline({ plan }: { plan: LearningPlan }) {
                     </span>
                   );
                 })}
+                <button
+                  type="button"
+                  onClick={() => testOnStage(stage.title, stage.summary)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  <ListChecks className="size-3.5" />
+                  Test me on this
+                </button>
               </div>
             </div>
           </li>
