@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+
+import { ollama, isOllamaAvailable, OLLAMA_MODEL } from "@/lib/llm/ollama-client";
 
 export const maxDuration = 30;
 
@@ -12,13 +13,13 @@ Give the learner short, direct coaching — not a score, not a rubric. In plain 
 - One specific thing to improve next time, referencing what they actually said.
 - Skip generic advice ("communicate clearly") in favor of something tied to this actual exchange.
 
-If the transcript is too short or thin to say anything specific, say that plainly instead of inventing feedback.`;
+If the transcript is too short or thin to say anything specific, say that plainly instead of inventing feedback. Respond with the coaching text only, no preamble.`;
 
 function mockCoaching(transcriptLen: number) {
   if (transcriptLen === 0) {
     return "No transcript came through for that call, so there's nothing specific to coach on — try again and keep talking for a bit longer.";
   }
-  return "Demo feedback — connect an ANTHROPIC_API_KEY to get real coaching based on what you actually said in this call.";
+  return "Demo feedback — Ollama isn't reachable right now, so this is a placeholder instead of coaching based on what you actually said.";
 }
 
 export async function POST(req: Request) {
@@ -26,36 +27,29 @@ export async function POST(req: Request) {
   const scenario = typeof body?.scenario === "string" ? body.scenario : "";
   const transcript = Array.isArray(body?.transcript) ? (body.transcript as TranscriptLine[]) : [];
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ coaching: mockCoaching(transcript.length), mocked: true });
-  }
-
   if (transcript.length === 0) {
     return NextResponse.json({ coaching: mockCoaching(0), mocked: false });
   }
 
+  if (!(await isOllamaAvailable())) {
+    return NextResponse.json({ coaching: mockCoaching(transcript.length), mocked: true });
+  }
+
   try {
-    const anthropic = new Anthropic({ apiKey });
     const transcriptText = transcript
       .map((l) => `${l.role === "assistant" ? "Counterpart" : "Learner"}: ${l.text}`)
       .join("\n");
 
-    const response = await anthropic.messages.create({
-      model: "claude-sonnet-5-5",
-      max_tokens: 400,
-      system: SYSTEM_PROMPT,
+    const response = await ollama.chat.completions.create({
+      model: OLLAMA_MODEL,
       messages: [
-        {
-          role: "user",
-          content: `Scenario: ${scenario}\n\nTranscript:\n${transcriptText}`,
-        },
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Scenario: ${scenario}\n\nTranscript:\n${transcriptText}` },
       ],
     });
 
-    const text = response.content.find((b) => b.type === "text");
-    const coaching = text && "text" in text ? text.text : mockCoaching(transcript.length);
-    return NextResponse.json({ coaching, mocked: false });
+    const coaching = response.choices[0]?.message?.content?.trim();
+    return NextResponse.json({ coaching: coaching || mockCoaching(transcript.length), mocked: !coaching });
   } catch (err) {
     console.error("coaching generation failed", err);
     return NextResponse.json({ coaching: mockCoaching(transcript.length), mocked: true });

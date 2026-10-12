@@ -1,8 +1,8 @@
 import type { QuizSet } from "./types";
 
 /**
- * Fallback generator — used when no ANTHROPIC_API_KEY is configured, or
- * the real generation call fails. Deliberately topic-agnostic (study-skill
+ * Fallback generator — used when Ollama isn't reachable, or the real
+ * generation call fails. Deliberately topic-agnostic (study-skill
  * questions, not invented domain facts) so it never presents a wrong
  * "fact" about the user's actual topic as correct.
  */

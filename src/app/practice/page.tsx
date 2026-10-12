@@ -124,11 +124,9 @@ function PracticeInner() {
           <div className="flex flex-col gap-6">
             {mocked && (
               <div className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-2.5 text-sm text-accent-foreground">
-                Demo data — connect an{" "}
-                <code className="rounded bg-accent/20 px-1 py-0.5 text-xs">
-                  ANTHROPIC_API_KEY
-                </code>{" "}
-                to generate real quizzes grounded in your topic.
+                Demo data — make sure{" "}
+                <code className="rounded bg-accent/20 px-1 py-0.5 text-xs">ollama serve</code>{" "}
+                is running locally to generate a real quiz on your topic.
               </div>
             )}
             <Progress value={(currentIndex / quiz.questions.length) * 100} />

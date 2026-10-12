@@ -5,8 +5,8 @@ import type { PlanInput } from "./plan-input";
 const PRIORITY_CYCLE: Priority[] = ["high", "medium", "low"];
 
 /**
- * Fallback generator — used when no ANTHROPIC_API_KEY is configured, or the
- * real generation call fails. Deliberately generic per-topic content (not
+ * Fallback generator — used when Ollama isn't reachable, or the real
+ * generation call fails. Deliberately generic per-topic content (not
  * domain facts) so it never presents something wrong as a real study plan;
  * the period structure and date math are real either way.
  */

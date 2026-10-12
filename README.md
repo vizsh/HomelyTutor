@@ -15,8 +15,9 @@ sample history so the app is useful to click through without signing in.
 - UI: a small hand-rolled component set (not shadcn's CLI output, but the same pattern — Radix
   primitives + CVA), in a warm/light "soft SaaS" theme deliberately avoiding the dark/gradient
   "AI app" look
-- Plan & Practice: Claude (`@anthropic-ai/sdk`), with a web-search tool for grounded resource
-  links on the Plan pillar
+- Plan & Practice: a local [Ollama](https://ollama.com) model (`llama3.1:8b` by default) over its
+  OpenAI-compatible API — free, no account, no API key. No web search locally, so resource
+  entries are named but never carry a (possibly fake) URL
 - Spar: OpenAI's Realtime API over WebRTC — the browser mic connects *directly* to OpenAI; the
   Next.js server only mints a short-lived token, so it isn't bound by serverless function
   duration limits
@@ -37,21 +38,26 @@ already seeded in the committed `data/app.db`. To re-seed from scratch:
 rm data/app.db && npm run db:seed
 ```
 
-## Environment variables
+## Environment variables & local setup
 
-Copy `.env.local.example` to `.env.local` and fill in what you want live:
+`/plan` and `/practice` need [Ollama](https://ollama.com) running locally — free, no key:
+
+```bash
+ollama serve
+ollama pull llama3.1:8b
+```
+
+If Ollama isn't reachable, both pillars fall back to clearly-labeled demo data automatically —
+the app never pretends to have live data it doesn't. Override the model/host via `.env.local`
+(see `.env.local.example`) if you're running a different model or a remote Ollama instance.
+
+`/spar`'s live voice calls still need a paid `OPENAI_API_KEY` (no free/local equivalent wired up
+yet — OpenAI's Realtime API is the only piece of this app that costs money):
 
 ```bash
 cp .env.local.example .env.local
+# then fill in OPENAI_API_KEY
 ```
-
-| Variable | Needed for | Without it |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | `/plan` and `/practice` real generation | Falls back to clearly-labeled demo data |
-| `OPENAI_API_KEY` | `/spar` live voice calls | Shows a setup message instead of connecting |
-
-Both pillars degrade gracefully without their key — the app never pretends to have live data it
-doesn't.
 
 ## A known, accepted tradeoff
 
@@ -64,7 +70,11 @@ driver.
 ## Deploying on Vercel
 
 1. Push this repo, import it in Vercel.
-2. Add `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` as environment variables in the Vercel project
-   settings (not committed — see above).
+2. Add `OPENAI_API_KEY` as an environment variable in the Vercel project settings (not committed).
 3. Deploy. The Spar pillar's voice calls go straight from the browser to OpenAI; Vercel never
    proxies the audio.
+
+**Caveat:** Ollama is a local process — a deployed Vercel instance has no local Ollama to reach,
+so `/plan` and `/practice` will run in demo-fallback mode in production unless `OLLAMA_BASE_URL`
+points at an Ollama instance reachable from the internet (e.g. one you run on your own server).
+This is a real tradeoff of going fully free/local instead of a hosted API.
