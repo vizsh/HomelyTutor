@@ -26,8 +26,10 @@ sqlite.exec(`
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id),
     goal TEXT NOT NULL,
-    total_duration_label TEXT NOT NULL,
-    stages_json TEXT NOT NULL,
+    exam_name TEXT NOT NULL,
+    target_date TEXT NOT NULL,
+    days_remaining INTEGER NOT NULL,
+    plan_json TEXT NOT NULL,
     mocked INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL
   );

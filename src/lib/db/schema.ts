@@ -13,8 +13,10 @@ export const learningPlans = sqliteTable("learning_plans", {
     .notNull()
     .references(() => users.id),
   goal: text("goal").notNull(),
-  totalDurationLabel: text("total_duration_label").notNull(),
-  stagesJson: text("stages_json").notNull(),
+  examName: text("exam_name").notNull(),
+  targetDate: text("target_date").notNull(),
+  daysRemaining: integer("days_remaining").notNull(),
+  planJson: text("plan_json").notNull(),
   mocked: integer("mocked", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });

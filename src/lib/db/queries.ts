@@ -12,8 +12,10 @@ export function savePlan(userId: string, plan: LearningPlan, mocked: boolean) {
       id: randomUUID(),
       userId,
       goal: plan.goal,
-      totalDurationLabel: plan.totalDurationLabel,
-      stagesJson: JSON.stringify(plan.stages),
+      examName: plan.examName,
+      targetDate: plan.targetDate,
+      daysRemaining: plan.daysRemaining,
+      planJson: JSON.stringify(plan),
       mocked,
       createdAt: new Date(),
     })

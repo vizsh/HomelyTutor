@@ -43,9 +43,10 @@ export default async function HistoryPage() {
               <Card key={plan.id} className="p-4">
                 <CardContent className="flex items-center justify-between gap-3 p-0">
                   <div className="min-w-0">
-                    <p className="truncate font-serif text-base capitalize">{plan.goal}</p>
+                    <p className="truncate font-serif text-base">{plan.examName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {plan.totalDurationLabel} · {formatRelativeTime(new Date(plan.createdAt))}
+                      {plan.daysRemaining} days out as of generation ·{" "}
+                      {formatRelativeTime(new Date(plan.createdAt))}
                     </p>
                   </div>
                   {plan.mocked && <Badge variant="outline">Demo</Badge>}

@@ -1,72 +1,72 @@
-import type { LearningPlan, PlanStage } from "./types";
+import type { LearningPlan, Priority, PlanPeriod } from "./types";
+import { computePeriods, daysBetween } from "./periods";
+import type { PlanInput } from "./plan-input";
+
+const PRIORITY_CYCLE: Priority[] = ["high", "medium", "low"];
 
 /**
- * Fallback generator — used when no ANTHROPIC_API_KEY is configured, or
- * the real generation call fails. Produces a generic but plausible
- * curriculum shape so the app degrades gracefully instead of breaking.
+ * Fallback generator — used when no ANTHROPIC_API_KEY is configured, or the
+ * real generation call fails. Deliberately generic per-topic content (not
+ * domain facts) so it never presents something wrong as a real study plan;
+ * the period structure and date math are real either way.
  */
-export async function generateMockPlan(goal: string): Promise<LearningPlan> {
-  const topic = goal.trim().replace(/^i want to learn\s*/i, "").replace(/\.$/, "");
-  const display = topic.length > 0 ? topic : "this";
+export async function generateMockPlan(input: PlanInput): Promise<LearningPlan> {
+  const today = new Date();
+  const target = new Date(input.targetDate);
+  const slots = computePeriods(today, target, input.studyDays);
 
-  const stages: PlanStage[] = [
-    {
-      id: "foundations",
-      title: `Foundations of ${display}`,
-      summary:
-        "The core vocabulary and mental model — what the field actually is, and the handful of ideas everything else builds on.",
-      durationLabel: "Week 1",
-      resources: [
-        { kind: "docs", label: "Official getting-started guide" },
-        { kind: "video", label: "Beginner crash course" },
-      ],
-    },
-    {
-      id: "fundamentals",
-      title: "Core fundamentals, hands-on",
-      summary:
-        "The skills you'll use constantly. Less reading, more doing — small exercises that force you to apply each idea.",
-      durationLabel: "Weeks 2–3",
-      resources: [
-        { kind: "course", label: "Structured intro course" },
-        { kind: "practice", label: "Guided exercises" },
-      ],
-    },
-    {
-      id: "project",
-      title: "First real project",
-      summary:
-        "A small, complete build that forces you to combine everything so far — this is where it stops being abstract.",
-      durationLabel: "Weeks 4–5",
-      resources: [
-        { kind: "practice", label: "Project walkthrough" },
-        { kind: "docs", label: "Reference docs, as needed" },
-      ],
-    },
-    {
-      id: "depth",
-      title: "Going deeper",
-      summary:
-        "The parts that separate someone who's dabbled from someone who's competent — edge cases, tradeoffs, the 'why' behind the defaults.",
-      durationLabel: "Weeks 6–8",
-      resources: [
-        { kind: "book", label: "A well-regarded deeper text" },
-        { kind: "course", label: "Intermediate course" },
-      ],
-    },
-    {
-      id: "practice-loop",
-      title: "Build the practice habit",
-      summary:
-        "Ongoing, lower-intensity reps to keep the skill sharp — this is also where this app's test and practice modes take over.",
-      durationLabel: "Ongoing",
-      resources: [{ kind: "practice", label: "Recurring practice sessions" }],
-    },
-  ];
+  const periods: PlanPeriod[] = slots.map((slot, i) => {
+    const topicCount = slot.studyDayCount <= 3 ? 1 : 2;
+    const topics = Array.from({ length: topicCount }).map((_, j) => {
+      const priority = PRIORITY_CYCLE[(i + j) % 3];
+      return {
+        id: `${slot.id}-t${j + 1}`,
+        title: `${input.examName} — core topic ${i + 1}.${j + 1}`,
+        summary:
+          priority === "high"
+            ? "Foundational, heavily-weighted material — build this first and revisit it."
+            : priority === "medium"
+              ? "Standard coverage — solid, expected material for this stage."
+              : "Lighter pass — useful but lower-stakes for this exam.",
+        priority,
+        estimatedHours: Math.max(1, Math.round(slot.studyDayCount * input.hoursPerDay * (0.5 / topicCount))),
+        resources: [
+          { kind: "docs" as const, label: "Syllabus reference material" },
+          { kind: "practice" as const, label: "Practice questions" },
+        ],
+      };
+    });
+
+    const isCheckpoint = (i + 1) % 4 === 0 || i === slots.length - 1;
+
+    return {
+      id: slot.id,
+      label: slot.label,
+      dateRangeLabel: slot.dateRangeLabel,
+      startDate: slot.startDate,
+      endDate: slot.endDate,
+      topics,
+      milestone: isCheckpoint
+        ? i === slots.length - 1
+          ? "Final review + full mock test"
+          : "Checkpoint: revise everything so far"
+        : undefined,
+    };
+  });
+
+  const allTopics = periods.flatMap((p) => p.topics);
+  const priorityBreakdown = { high: 0, medium: 0, low: 0 };
+  for (const t of allTopics) priorityBreakdown[t.priority] += t.estimatedHours;
 
   return {
-    goal: display,
-    totalDurationLabel: "~2 months to first competence",
-    stages,
+    goal: input.goal,
+    examName: input.examName,
+    targetDate: target.toISOString(),
+    daysRemaining: daysBetween(today, target),
+    hoursPerDay: input.hoursPerDay,
+    studyDays: input.studyDays,
+    totalStudyHours: allTopics.reduce((sum, t) => sum + t.estimatedHours, 0),
+    priorityBreakdown,
+    periods,
   };
 }

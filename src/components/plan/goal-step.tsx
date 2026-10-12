@@ -5,19 +5,13 @@ import { ArrowUp, Mic } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-export function GoalForm({
-  onSubmit,
-  pending,
-}: {
-  onSubmit: (goal: string) => void;
-  pending: boolean;
-}) {
+export function GoalStep({ onNext }: { onNext: (goal: string) => void }) {
   const [value, setValue] = useState("");
   const [listening, setListening] = useState(false);
 
   function submit() {
-    if (!value.trim() || pending) return;
-    onSubmit(value.trim());
+    if (!value.trim()) return;
+    onNext(value.trim());
   }
 
   return (
@@ -31,10 +25,9 @@ export function GoalForm({
             submit();
           }
         }}
-        placeholder="I want to learn negotiation, don't know where to start…"
+        placeholder="What are you preparing for? e.g. 'Physics unit test' or 'JEE Main'…"
         rows={1}
-        disabled={pending}
-        className="min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground outline-none disabled:opacity-60"
+        className="min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-[15px] leading-6 text-foreground placeholder:text-muted-foreground outline-none"
       />
       <button
         type="button"
@@ -53,9 +46,9 @@ export function GoalForm({
       <button
         type="button"
         onClick={submit}
-        disabled={!value.trim() || pending}
+        disabled={!value.trim()}
         className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors disabled:opacity-30"
-        aria-label="Plan it"
+        aria-label="Next"
       >
         <ArrowUp className="size-5" />
       </button>
