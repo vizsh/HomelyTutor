@@ -2,6 +2,7 @@ import type { LearningPlan } from "./types";
 import type { PlanInput } from "./plan-input";
 
 export type GeneratePlanResult = {
+  id: string;
   plan: LearningPlan;
   mocked: boolean;
 };

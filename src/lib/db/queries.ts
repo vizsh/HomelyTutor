@@ -7,9 +7,10 @@ import type { LearningPlan } from "@/lib/plan/types";
 import type { QuizSet } from "@/lib/practice/types";
 
 export function savePlan(userId: string, plan: LearningPlan, mocked: boolean) {
+  const id = randomUUID();
   db.insert(learningPlans)
     .values({
-      id: randomUUID(),
+      id,
       userId,
       goal: plan.goal,
       examName: plan.examName,
@@ -20,6 +21,7 @@ export function savePlan(userId: string, plan: LearningPlan, mocked: boolean) {
       createdAt: new Date(),
     })
     .run();
+  return id;
 }
 
 export function saveQuizAttempt(userId: string, quiz: QuizSet, score: number, mocked: boolean) {
@@ -54,7 +56,7 @@ export function getUserHistory(userId: string) {
   return { plans, quizzes };
 }
 
-export function getLatestPlan(userId: string): LearningPlan | null {
+export function getLatestPlanRecord(userId: string): { id: string; plan: LearningPlan } | null {
   const row = db
     .select()
     .from(learningPlans)
@@ -65,10 +67,41 @@ export function getLatestPlan(userId: string): LearningPlan | null {
 
   if (!row) return null;
   try {
-    return JSON.parse(row.planJson) as LearningPlan;
+    return { id: row.id, plan: JSON.parse(row.planJson) as LearningPlan };
   } catch {
     return null;
   }
+}
+
+export function getLatestPlan(userId: string): LearningPlan | null {
+  return getLatestPlanRecord(userId)?.plan ?? null;
+}
+
+/** Toggles a topic's completion within a stored plan. Scoped to the owning
+ * user so one user can't mutate another's plan by guessing an id. */
+export function setTopicCompletion(
+  userId: string,
+  planId: string,
+  periodId: string,
+  topicId: string,
+  completed: boolean,
+) {
+  const row = db
+    .select()
+    .from(learningPlans)
+    .where(eq(learningPlans.id, planId))
+    .get();
+
+  if (!row || row.userId !== userId) return false;
+
+  const plan = JSON.parse(row.planJson) as LearningPlan;
+  const period = plan.periods.find((p) => p.id === periodId);
+  const topic = period?.topics.find((t) => t.id === topicId);
+  if (!topic) return false;
+
+  topic.completed = completed;
+  db.update(learningPlans).set({ planJson: JSON.stringify(plan) }).where(eq(learningPlans.id, planId)).run();
+  return true;
 }
 
 /** Topics worth re-practicing: the most recent attempt per distinct topic

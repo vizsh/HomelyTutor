@@ -21,6 +21,7 @@ export type PlanTopic = {
   priority: Priority;
   estimatedHours: number;
   resources: PlanResource[];
+  completed?: boolean;
 };
 
 export type PlanPeriod = {

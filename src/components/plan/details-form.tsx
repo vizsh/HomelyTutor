@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Compass } from "lucide-react";
+import { ArrowLeft, Compass, FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { PlanInput } from "@/lib/plan/plan-input";
 import type { StudyDays } from "@/lib/plan/types";
+import { toLocalISODate } from "@/lib/format-local-date";
 
 const HOURS_OPTIONS: { label: string; value: number }[] = [
   { label: "< 1 hr", value: 0.5 },
@@ -16,12 +17,6 @@ const HOURS_OPTIONS: { label: string; value: number }[] = [
   { label: "2–4 hrs", value: 3 },
   { label: "4+ hrs", value: 5 },
 ];
-
-function todayISODate() {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
-}
 
 export function DetailsForm({
   goal,
@@ -38,12 +33,21 @@ export function DetailsForm({
   const [targetDate, setTargetDate] = useState("");
   const [hoursPerDay, setHoursPerDay] = useState<number | null>(null);
   const [studyDays, setStudyDays] = useState<StudyDays>("daily");
+  const [showSyllabus, setShowSyllabus] = useState(false);
+  const [syllabusText, setSyllabusText] = useState("");
 
   const canSubmit = examName.trim().length > 0 && targetDate && hoursPerDay !== null;
 
   function submit() {
     if (!canSubmit) return;
-    onSubmit({ goal, examName: examName.trim(), targetDate, hoursPerDay: hoursPerDay!, studyDays });
+    onSubmit({
+      goal,
+      examName: examName.trim(),
+      targetDate,
+      hoursPerDay: hoursPerDay!,
+      studyDays,
+      syllabusText: syllabusText.trim() || undefined,
+    });
   }
 
   return (
@@ -72,7 +76,7 @@ export function DetailsForm({
         <Input
           id="targetDate"
           type="date"
-          min={todayISODate()}
+          min={toLocalISODate(new Date())}
           value={targetDate}
           onChange={(e) => setTargetDate(e.target.value)}
         />
@@ -118,6 +122,31 @@ export function DetailsForm({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {!showSyllabus ? (
+          <button
+            type="button"
+            onClick={() => setShowSyllabus(true)}
+            className="flex items-center gap-1.5 self-start text-sm font-medium text-primary hover:underline"
+          >
+            <FileText className="size-3.5" />
+            Paste your syllabus or notes (optional)
+          </button>
+        ) : (
+          <>
+            <Label htmlFor="syllabusText">Your syllabus or notes (optional)</Label>
+            <textarea
+              id="syllabusText"
+              value={syllabusText}
+              onChange={(e) => setSyllabusText(e.target.value)}
+              placeholder="Paste your actual syllabus, professor's notes, or past papers — I'll build the plan strictly from this instead of general knowledge."
+              rows={5}
+              className="w-full resize-none rounded-xl border border-input bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring"
+            />
+          </>
+        )}
       </div>
 
       <Button onClick={submit} disabled={!canSubmit || pending} size="lg" className="mt-2">
